@@ -1,0 +1,57 @@
+<!doctype html>
+<html style="font-size: 32px;" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>详情</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/css/my.css}"/>
+</head>
+<body>
+
+<div>
+
+    <div class="circle-detail">
+        <div class="user-column pk-flex-box algin-center pk-pd-lr16 pk-pd-tb20 pk-bg-white pk-text-ellipsis1">
+            <div class="user-column-left pk-text-ellipsis1 pk-flex-box algin-center">
+
+                <div class="user-column-middle pk-pd-l14 pk-text-ellipsis1">
+                    <p class="user-column-middle-name pk-text-ellipsis1 pk-flex-box">
+                        <span class="pk-inline-block pk-text-ellipsis1 nickname" style="color: red" th:text="${contentDetail.id}"></span>
+                    </p>
+                    <p class="user-column-middle-desciption pk-text-ellipsis1">
+                        <span th:text="${contentDetail.time}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="water-mark">
+            <div class="detail-container pk-pd-b16">
+                <div class="content-text pk-pd-lr16 pk-fs-18 pk-select-none" style="text-indent: 0px;">
+                    <span th:utext="${contentDetail.content}"></span>
+                </div>
+            </div>
+            <div style="background-color: white" th:each="image:${contentDetail.images}">
+                <span style="text-align: center;display:block;">
+                    <img class="image-detail" th:src="${image}">
+                </span>
+            </div>
+            <div style="background-color: white" class="pk-pd-lr16" th:each="auurl:${contentDetail.audios}">
+                <audio controls="controls" th:src="${auurl}">您的浏览器不支持 audio 标签</audio>
+                <p><a th:href="${auurl}">下载</a></p>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+</body>
+
+</html>

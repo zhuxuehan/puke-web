@@ -1,0 +1,27 @@
+<!doctype html>
+<html style="font-size: 32px;" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>获取录音</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/css/my.css}"/>
+</head>
+<body>
+<form>
+    <p>公众号地址：<input type="text" id="wxurl"/></p>
+    <input type="button" value="提交" onclick="getVoiceList()"/>
+</form>
+
+<script type="text/javascript">
+    function getVoiceList() {
+        let elementById = document.getElementById("wxurl").value;
+        window.location.href = "/getVoiceList/" + elementById.split("/").slice(-1)[0];
+    }
+</script>
+</body>
+</html>
