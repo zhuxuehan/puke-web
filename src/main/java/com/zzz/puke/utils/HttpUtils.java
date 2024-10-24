@@ -1,5 +1,7 @@
 package com.zzz.puke.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -24,10 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class HttpUtils {
     private final static Logger logger = LoggerFactory.getLogger(HttpUtils.class);
@@ -160,6 +159,23 @@ public class HttpUtils {
             }
         }
         return result;
+    }
+
+    public static void main(String[] args) {
+        String url = "https://api.zsxq.com/v2/groups/88851125114152/topics?scope=all&count=20";
+        HashMap<String, String> paramMap = new HashMap<>();
+        HashMap<String, String> header = new HashMap<>();
+        header.put("cookie", "sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%22191bc86a338206-0d964c8ddefd8a8-26001151-1327104-191bc86a339c9a%22%2C%22first_id%22%3A%22%22%2C%22props%22%3A%7B%22%24latest_traffic_source_type%22%3A%22%E8%87%AA%E7%84%B6%E6%90%9C%E7%B4%A2%E6%B5%81%E9%87%8F%22%2C%22%24latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC%22%2C%22%24latest_referrer%22%3A%22https%3A%2F%2Fwww.google.com.hk%2F%22%7D%2C%22identities%22%3A%22eyIkaWRlbnRpdHlfY29va2llX2lkIjoiMTkxYmM4NmEzMzgyMDYtMGQ5NjRjOGRkZWZkOGE4LTI2MDAxMTUxLTEzMjcxMDQtMTkxYmM4NmEzMzljOWEifQ%3D%3D%22%2C%22history_login_id%22%3A%7B%22name%22%3A%22%22%2C%22value%22%3A%22%22%7D%2C%22%24device_id%22%3A%22191bc86a338206-0d964c8ddefd8a8-26001151-1327104-191bc86a339c9a%22%7D; zsxq_access_token=2DD8ECD3-941E-53DB-9847-98E44E8FBD8B_0B864C13C20A0924; tfstk=fyFjt1YWOnxbou6VdFQrdUHk-cl_Gl1ehFgT-Pd2WjhvXFn7uI-Z3Pn_fuoo_mP43RT0NkOwgiX0WCGZ6MSFT6zDofcOYAaC2Z-mJVAA_mpvyygQFfsFT6zvR1LK5MP2hSMKAVhtkmdAwagn7f39Mln-e23eDfEt6aG-82xvXVpxwY3E2cht6lU-NFISrtiYla4Sr6MA51aoVCdB-mkvVr9wKpVSlxNTk0gjl7gjhDMoJ0H3MuzTgSDleLGgzJZ_BkIy3meIRuMUhMObAo0T5VEftei8GPNSn88e9zMsc8FxFFdTzzexpRZfcKmY3uMnyYL1t4rE2rVYFNx8kkojM4HP9wa-B8PmKSSJGXe3ujyTvgJqDJgO41REAoo6CUMH14iFPa9MI5_JrB_0Lx3EH40zTa_WcdDxr4iFPa9MIx3ozY75Pn9G.; zsxqsessionid=f19ef86aa3f4e17ddf1eb3b3e5084a6b; abtest_env=product");
+        try {
+            String result = doGet(url, paramMap, header);
+            ObjectMapper listMapper = new ObjectMapper();
+            JsonNode listNode = listMapper.readValue(result, JsonNode.class);
+            // 输出：你好
+            System.out.println(listNode);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

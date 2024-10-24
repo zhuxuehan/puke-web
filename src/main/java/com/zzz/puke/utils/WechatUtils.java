@@ -10,9 +10,8 @@ import java.util.HashMap;
 
 public class WechatUtils {
     public static String PUKE = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=be5b3c4a-e9f5-43c9-8edb-a501d5196438";
-    //    public static String PUKE = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1d8d10cf-e460-44de-8a72-28fd211a0185";
     public static String ERR = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1d8d10cf-e460-44de-8a72-28fd211a0185";
-    public static String LOCAL = "http://82.157.136.21/get/";
+    public static String LOCAL = "http://139.196.238.213/get/";
 
     public static void sendWechatMessage(int lastId, String time, String content, JsonNode images, JsonNode audios, JsonNode files, ArrayNode list_comments) {
         HashMap<String, String> paramMap = new HashMap<>();

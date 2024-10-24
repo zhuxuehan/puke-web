@@ -11,20 +11,19 @@ import com.zzz.puke.service.MethodService;
 import com.zzz.puke.service.PukeContentService;
 import com.zzz.puke.service.WXContentService;
 import com.zzz.puke.utils.WechatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 @Controller
 public class ContentController {
-
-    final static Logger logger = LoggerFactory.getLogger(ContentController.class);
 
     @Autowired
     PukeContentService pukeContentService;
@@ -164,7 +163,7 @@ public class ContentController {
     @GetMapping("/sendURl")
     @ResponseBody
     public String sendURl() {
-        WechatUtils.sendSimpleMessage("[点击查看历史消息](http://82.157.136.21/list)");
+        WechatUtils.sendSimpleMessage("[点击查看历史消息](http://139.196.238.213/list)");
         return "success";
     }
 
