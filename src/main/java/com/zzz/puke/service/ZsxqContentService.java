@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 @Service
 public class ZsxqContentService {
@@ -70,7 +73,7 @@ public class ZsxqContentService {
                         ArrayNode imagesArray = (ArrayNode) row.get("talk").get("images");
                         if (imagesArray != null) {
                             for (JsonNode image : imagesArray) {
-                                images.add(image.get("thumbnail").get("url").asText());
+                                images.add(image.get("large").get("url").asText());
                             }
                         }
                     } else if (type.equals("q&a")) {
@@ -97,7 +100,7 @@ public class ZsxqContentService {
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("header: {} , list: {}", header, list);
-            WechatUtils.sendErrorMessage("ContentAndSend:" + e.toString() + header.toString());
+            WechatUtils.sendErrorMessage("ContentAndSend:" + e + header);
         }
 
     }

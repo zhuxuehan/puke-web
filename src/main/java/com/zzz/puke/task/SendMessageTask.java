@@ -37,11 +37,12 @@ public class SendMessageTask {
     @Scheduled(cron = "0 */20 0-7 * * ?")
     public void execute3() {
         pukeContentService.getContentAndSend();
+        zsxqContentService.getAllContentAndSend();
     }
 
     @Scheduled(cron = "0 0 7 * * ?")
     public void sendUrl() {
-        ZsxqContentService.sendHistory();
+        zsxqContentService.sendHistory();
         pukeContentService.sendHistory();
 
     }
