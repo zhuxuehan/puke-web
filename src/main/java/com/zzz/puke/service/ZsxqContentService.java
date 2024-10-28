@@ -57,7 +57,7 @@ public class ZsxqContentService {
             String lastTime = lastKv.getZsxqLastTime();
             ArrayNode rows = (ArrayNode) listNode.get("resp_data").get("topics");
 
-            for (int i = rows.size() - 1; i > 0; i--) {
+            for (int i = rows.size() - 1; i >= 0; i--) {
                 JsonNode row = rows.get(i);
                 String curTime = row.get("create_time").asText();
                 LinkedList<String> images = new LinkedList<>();

@@ -63,7 +63,7 @@ public class PukeContentService {
             lastId = Integer.parseInt(lastKv.getPukeV());
 
             ArrayNode rows = (ArrayNode) data.get("rows");
-            for (int i = rows.size() - 1; i > 0; i--) {
+            for (int i = rows.size() - 1; i >= 0; i--) {
                 JsonNode row = rows.get(i);
                 if (row.get("id").asInt() > lastId) {
                     String content = getContent(row.get("id").asInt());
