@@ -10,6 +10,7 @@ import com.zzz.puke.enums.PukeURL;
 import com.zzz.puke.service.MethodService;
 import com.zzz.puke.service.PukeContentService;
 import com.zzz.puke.service.WXContentService;
+import com.zzz.puke.service.ZsxqContentService;
 import com.zzz.puke.utils.WechatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,6 +34,9 @@ public class ContentController {
 
     @Autowired
     MethodService methodService;
+
+    @Autowired
+    ZsxqContentService zsxqContentService;
 
 
     @GetMapping("/list")
@@ -163,7 +167,7 @@ public class ContentController {
     @GetMapping("/sendURl")
     @ResponseBody
     public String sendURl() {
-        WechatUtils.sendSimpleMessage("[点击查看历史消息](http://139.196.238.213/list)");
+//        WechatUtils.sendMessage("[点击查看历史消息](http://139.196.238.213/list)");
         return "success";
     }
 
@@ -211,5 +215,13 @@ public class ContentController {
         methodService.sendCountAndClear();
         return "success";
     }
+
+    @GetMapping("/getzsxq/{group}")
+    @ResponseBody
+    public String zzxq(String group) {
+        zsxqContentService.getAllContentAndSend();
+        return "success";
+    }
+
 
 }
