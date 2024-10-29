@@ -29,6 +29,7 @@ public class PukeContentService {
 
     public static int lastId;
     public static HashMap<String, String> header;
+    public static String LOCAL_HOST;
 
     private static Random random = new Random();
 
@@ -106,8 +107,8 @@ public class PukeContentService {
                             cs.add(c.get("content").asText());
                         }
                     }
-
-                    WechatUtils.sendWechatMessage(PUKE, lastId + "", time, contentData.get("content").asText(), imagesList, audiosList, fList, cs);
+                    String LOCAL_URL = "http://" + LOCAL_HOST + "/get/";
+                    WechatUtils.sendWechatMessage(LOCAL_URL, PUKE, lastId + "", time, contentData.get("content").asText(), imagesList, audiosList, fList, cs);
                 }
             }
             lastKv.setPukeV(lastId + "");
@@ -194,6 +195,7 @@ public class PukeContentService {
     public void sendHistory() {
         SysConfig config = sysConfigRepository.findByK("host");
         String host = config.getSysV();
+        LOCAL_HOST = host;
         WechatUtils.sendMessage("[点击查看历史消息](http://" + host + "/list)", PUKE);
     }
 }

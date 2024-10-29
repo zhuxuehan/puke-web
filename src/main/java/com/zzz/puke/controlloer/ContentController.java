@@ -167,7 +167,7 @@ public class ContentController {
     @GetMapping("/sendURl")
     @ResponseBody
     public String sendURl() {
-//        WechatUtils.sendMessage("[点击查看历史消息](http://139.196.238.213/list)");
+        pukeContentService.sendHistory();
         return "success";
     }
 
