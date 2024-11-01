@@ -3,12 +3,14 @@ package com.zzz.puke.bean;
 import java.util.List;
 
 public class ContentMode {
+    private String group;
     private String id;
     private String time;
     private String content;
     private List<String> images;
     private List<String> audios;
     private List<String> comments;
+    private List<String> files;
 
     public String getId() {
         return id;
@@ -56,5 +58,21 @@ public class ContentMode {
 
     public void setComments(List<String> comments) {
         this.comments = comments;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
     }
 }

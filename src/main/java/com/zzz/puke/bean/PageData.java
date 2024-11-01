@@ -3,6 +3,7 @@ package com.zzz.puke.bean;
 public class PageData<T> {
     private int pageSize;
     private int pageNum;
+    private String endTime;
     private T data;
 
     public int getPageSize() {
@@ -27,5 +28,13 @@ public class PageData<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 }

@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.zzz.puke.anno.InterfaceCount;
 import com.zzz.puke.bean.ContentMode;
 import com.zzz.puke.bean.PageData;
+import com.zzz.puke.bean.XqPacket;
 import com.zzz.puke.enums.PukeURL;
 import com.zzz.puke.service.MethodService;
 import com.zzz.puke.service.PukeContentService;
 import com.zzz.puke.service.WXContentService;
 import com.zzz.puke.service.ZsxqContentService;
-import com.zzz.puke.utils.WechatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 @Controller
 public class ContentController {
@@ -113,7 +115,6 @@ public class ContentController {
         model.addAttribute("pageData", pageData);
         return "index";
     }
-
 
     @GetMapping("/get/{id}")
     @InterfaceCount
@@ -216,12 +217,6 @@ public class ContentController {
         return "success";
     }
 
-    @GetMapping("/getzsxq/{group}")
-    @ResponseBody
-    public String zzxq(String group) {
-        zsxqContentService.getAllContentAndSend();
-        return "success";
-    }
 
 
 }

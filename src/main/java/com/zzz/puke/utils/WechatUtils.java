@@ -1,6 +1,7 @@
 package com.zzz.puke.utils;
 
 import com.overzealous.remark.Remark;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.entity.ContentType;
 
 import java.util.HashMap;
@@ -34,22 +35,26 @@ public class WechatUtils {
             }
             text += convert;
         }
+
         if (images.size() > 0) {
             for (int j = 0; j < images.size(); j++) {
 //                text += "![](" + PukeURL.FILE_PRE + images.get(j).get("src").asText() + ")\n";
                 text += "\n[图片" + j + "](" + images.get(j) + ") \n";
             }
         }
+
         if (audios.size() > 0) {
             for (int j = 0; j < audios.size(); j++) {
                 text += "\n[录音" + j + "](" + audios.get(j) + ") \n";
             }
         }
+
         if (files.size() > 0) {
             for (int j = 0; j < files.size(); j++) {
                 text += "\n[文件" + j + "](" + files.get(j) + ") \n";
             }
         }
+
         for (int k = 0; k < list_comments.size(); k++) {
             text += "\n#### 评论" + k + "：" + list_comments.get(k) + "\n";
         }
@@ -67,6 +72,7 @@ public class WechatUtils {
         HashMap<String, String> paramMap = new HashMap<>();
         paramMap.put("message", MarkdownUtils.getMarkdown(str));
         HttpUtils.doPost(url, paramMap, null, ContentType.APPLICATION_JSON);
+        System.out.println();
     }
 
 
