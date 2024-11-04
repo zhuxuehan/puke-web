@@ -2,6 +2,7 @@
 <html style="font-size: 32px;" lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="referrer" content="no-referrer">
     <title>圈子</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.css}"/>
     <link rel="stylesheet" th:href="@{/css/my.css}"/>
@@ -44,17 +45,13 @@
                     <!--内容图片-->
                     <a class="pk-block">
                         <div>
-                            <div>
-                                <span class="content-text pk-h4-text32 pk-select-none"
-                                      th:utext="${content.content}"></span>
-                            </div>
-                            <div></div>
+                            <span class="content-text pk-h4-text32" th:utext="${content.content}"></span>
                         </div>
 
                         <div>
                             <span th:each="image:${content.images}">
-                                <span class="img-wrap">
-                                    <img th:src="${image}">
+                                <span>
+                                    <img class="overflow-image" th:src="${image}">
                                 </span>
                             </span>
                         </div>
@@ -65,6 +62,12 @@
                     <div class="clear">
                         <div th:each="auurl:${content.audios}">
                             <audio controls="controls" th:src="${auurl}">您的浏览器不支持 audio 标签</audio>
+                        </div>
+                    </div>
+
+                    <div class="clear">
+                        <div th:each="filesU:${content.files}">
+                            <a th:href="${filesU}">文件</a>
                         </div>
                     </div>
 

@@ -43,7 +43,7 @@ body, html, input, textarea {
     position: relative;
     box-sizing: border-box;
     margin: 1%;
-    border-radius: 0.125rem;
+    border-radius: 0.25rem;
 }
 
 .clear {
@@ -228,4 +228,11 @@ body, html {
 
 .pk-bd-t {
     border-top: 0.03125rem solid #f2f2f2;
+}
+
+.overflow-image {
+    position: relative;
+    width: 100%; /* 或者更大 */
+    height: auto; /* 保持图片的宽高比 */
+    top: 20px; /* 向上偏移，使图片超出div */
 }

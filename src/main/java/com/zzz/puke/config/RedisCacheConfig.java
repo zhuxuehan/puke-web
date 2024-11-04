@@ -49,8 +49,9 @@ public class RedisCacheConfig {
 
         // 生成自定义缓存块,redis配置(这个取决于项目中是否有需要在使用@Cacheable缓存数据时,希望有不同的过期时间再决定是否使用)
         Map<String, RedisCacheConfiguration> customCacheBlockConfig = new LinkedHashMap<>();
-        customCacheBlockConfig.put("detail", getRedisCacheConfiguration(Duration.ofDays(1), key, value)); // 详情缓存时间
-        customCacheBlockConfig.put("voiceList", getRedisCacheConfiguration(Duration.ofDays(1), key, value)); // 详情缓存时间
+        customCacheBlockConfig.put("detail", getRedisCacheConfiguration(Duration.ofSeconds(900), key, value)); // 详情缓存时间
+        customCacheBlockConfig.put("voiceList", getRedisCacheConfiguration(Duration.ofSeconds(900), key, value)); // 详情缓存时间
+        customCacheBlockConfig.put("xqList", getRedisCacheConfiguration(Duration.ofSeconds(300), key, value)); // 详情缓存时间
         // 生成 CacheManager
         return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory)) // 非锁定Redis缓存编写器
                 .cacheDefaults(defaultRedisCacheConfiguration) // 缓存默认值配置

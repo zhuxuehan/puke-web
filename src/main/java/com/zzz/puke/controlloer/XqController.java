@@ -3,7 +3,7 @@ package com.zzz.puke.controlloer;
 import com.zzz.puke.anno.InterfaceCount;
 import com.zzz.puke.bean.ContentMode;
 import com.zzz.puke.bean.PageData;
-import com.zzz.puke.bean.XqPacket;
+import com.zzz.puke.bean.ContentPacket;
 import com.zzz.puke.service.MethodService;
 import com.zzz.puke.service.WXContentService;
 import com.zzz.puke.service.ZsxqContentService;
@@ -44,25 +44,25 @@ public class XqController {
         }
 
         String lastTime = "";
-        List<XqPacket> xqPacketsList = zsxqContentService.getXqPacketsList(group, "", params);
+        List<ContentPacket> packetsList = zsxqContentService.getXqPacketsList(group, "", params);
         try {
-            for (int i = xqPacketsList.size() - 1; i >= 0; i--) {
-                XqPacket packet = xqPacketsList.get(i);
+            for (int i = packetsList.size() - 1; i >= 0; i--) {
+                ContentPacket contentPacket = packetsList.get(i);
                 ContentMode contentMode = new ContentMode();
-                contentMode.setId(packet.getId());
-                contentMode.setTime(packet.getCurrTime());
-                contentMode.setContent(packet.getText());
-                contentMode.setGroup(packet.getGroup());
+                contentMode.setId(contentPacket.getId());
+                contentMode.setTime(contentPacket.getCurrTime());
+                contentMode.setContent(contentPacket.getText());
+                contentMode.setGroup(contentPacket.getGroup());
 
                 //图片
-                contentMode.setImages(packet.getImages());
+                contentMode.setImages(contentPacket.getImages());
                 //录音
                 //文件
-                contentMode.setFiles(packet.getFiles());
+                contentMode.setFiles(contentPacket.getFiles());
                 //评论
 //                contentMode.setComments(list_comments);
                 contents.add(contentMode);
-                lastTime = packet.getCurrTime();
+                lastTime = contentPacket.getCurrTime();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,6 +78,12 @@ public class XqController {
         }
         model.addAttribute("pageData", pageData);
         return "xqindex";
+    }
+
+    @RequestMapping("/list/{group}")
+    public String getFile() {
+        zsxqContentService.getAllContentAndSend();
+        return "success";
     }
 
 

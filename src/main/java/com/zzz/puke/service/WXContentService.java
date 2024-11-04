@@ -18,7 +18,6 @@ import java.util.regex.Pattern;
 public class WXContentService {
     private final static Logger logger = LoggerFactory.getLogger(WXContentService.class);
 
-    public static int lastId;
     public static HashMap<String, String> header;
 
     private static Random random = new Random();

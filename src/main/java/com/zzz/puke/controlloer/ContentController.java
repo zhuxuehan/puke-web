@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.zzz.puke.anno.InterfaceCount;
 import com.zzz.puke.bean.ContentMode;
 import com.zzz.puke.bean.PageData;
-import com.zzz.puke.bean.XqPacket;
 import com.zzz.puke.enums.PukeURL;
 import com.zzz.puke.service.MethodService;
 import com.zzz.puke.service.PukeContentService;
@@ -21,9 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 @Controller
 public class ContentController {

@@ -2,7 +2,7 @@ package com.zzz.puke.bean;
 
 import java.util.LinkedList;
 
-public class XqPacket {
+public class ContentPacket {
     private String id;
     private String currTime;
     private String type;

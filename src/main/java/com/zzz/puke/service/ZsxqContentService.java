@@ -3,7 +3,7 @@ package com.zzz.puke.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.zzz.puke.bean.XqPacket;
+import com.zzz.puke.bean.ContentPacket;
 import com.zzz.puke.bean.ZsxqKv;
 import com.zzz.puke.dao.SysConfigRepository;
 import com.zzz.puke.dao.ZsxqKvRepository;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.net.URLDecoder;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -72,12 +73,12 @@ public class ZsxqContentService {
                 JsonNode row = rows.get(i);
                 String curTime = row.get("create_time").asText();
                 if (curTime.compareTo(lastTime) > 0) {
-                    XqPacket packet = getXqPacket(row, header);
+                    ContentPacket contentPacket = getXqPacket(row, header);
                     String localurl = "localhost/xq/group/id?scop=1&endtime";
                     WechatUtils.sendWechatMessage(localurl, zsxqWebhook,
-                            packet.getId(), curTime, packet.getText(),
-                            packet.getImages(), packet.getAudios(),
-                            packet.getFiles(), packet.getComments());
+                            contentPacket.getId(), curTime, contentPacket.getText(),
+                            contentPacket.getImages(), contentPacket.getAudios(),
+                            contentPacket.getFiles(), contentPacket.getComments());
                     lastTime = curTime;
                 }
             }
@@ -92,34 +93,41 @@ public class ZsxqContentService {
 
     }
 
-    public List<XqPacket> getXqPacketsList(String group, String user, HashMap<String, String> params) {
-        ArrayList<XqPacket> pakcetsList = new ArrayList<>(20);
+    public List<ContentPacket> getXqPacketsList(String group, String user, HashMap<String, String> params) {
+        ArrayList<ContentPacket> pakcetsList = new ArrayList<>(20);
         ZsxqKv kv = zsxqKvRepository.findByGroup(group);
         HashMap<String, String> header = getHeader(kv);
-        String list = HttpUtils.doGet(String.format(ZSXQ_GROUP_URL, group), params, header);
-        ObjectMapper listMapper = new ObjectMapper();
-        JsonNode listNode = null;
-        try {
-            listNode = listMapper.readValue(list, JsonNode.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        ArrayNode rows = (ArrayNode) listNode.get("resp_data").get("topics");
+        ArrayNode rows = null;
+        int t = 0;
+        do {
+            String list = HttpUtils.doGet(String.format(ZSXQ_GROUP_URL, group), params, header);
+            ObjectMapper listMapper = new ObjectMapper();
+            JsonNode listNode = null;
+            try {
+                listNode = listMapper.readValue(list, JsonNode.class);
+                rows = (ArrayNode) listNode.get("resp_data").get("topics");
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } while (t < 3 && null == rows);
+
         if (null == rows) {
             return new ArrayList<>();
         }
         for (int i = rows.size() - 1; i >= 0; i--) {
             JsonNode row = rows.get(i);
-            XqPacket packet = getXqPacket(row, header);
-            pakcetsList.add(packet);
+            ContentPacket contentPacket = getXqPacket(row, header);
+            pakcetsList.add(contentPacket);
         }
+
         return pakcetsList;
     }
 
-    public XqPacket getXqPacket(JsonNode row, HashMap<String, String> header) {
-        XqPacket xqPacket = new XqPacket();
+    public ContentPacket getXqPacket(JsonNode row, HashMap<String, String> header) {
+        ContentPacket contentPacket = new ContentPacket();
         String type = row.get("type").asText();
-        xqPacket.setType(type);
+        contentPacket.setType(type);
         //根据不同类型的内容解析
         String text = "";
         String lastId = "";
@@ -131,17 +139,17 @@ public class ZsxqContentService {
         } else if (type.equals("q&a")) {
             text = getQandA(row);
         }
-        xqPacket.setText(text);
+        contentPacket.setText(text);
         lastId = row.get("topic_id").asText();
-        xqPacket.setId(lastId);
-        xqPacket.setCurrTime(row.get("create_time").asText());
+        contentPacket.setId(lastId);
+        contentPacket.setCurrTime(row.get("create_time").asText());
         if (null != talkNode) {
             //图片
-            xqPacket.setImages(getImagesArray(talkNode));
+            contentPacket.setImages(getImagesArray(talkNode));
             //文件
-            xqPacket.setFiles(getFilesArray(talkNode, header));
+            contentPacket.setFiles(getFilesArray(talkNode, header));
         }
-        return xqPacket;
+        return contentPacket;
     }
 
     private String getFileUrl(String fileId, HashMap<String, String> header) {
@@ -150,7 +158,7 @@ public class ZsxqContentService {
         ObjectMapper listMapper = new ObjectMapper();
         try {
             JsonNode listNode = listMapper.readValue(list, JsonNode.class);
-            if (null != listNode.get("resp_data")) {
+            if (null != listNode.get("resp_data").get("download_url")) {
                 return listNode.get("resp_data").get("download_url").asText();
             }
         } catch (Exception e) {
@@ -177,14 +185,14 @@ public class ZsxqContentService {
 
     private String getTalk(JsonNode talk) {
         if (null != talk.get("text")) {
-            return talk.get("text").asText();
+            return delStr(talk.get("text").asText());
         }
         return "";
     }
 
     private String getQandA(JsonNode row) {
         String q = row.get("question").get("text").asText();
-        String a = row.get("answer").get("text").asText();
+        String a = delStr(row.get("answer").get("text").asText());
         return "<br>Q：" + q + "<br><br>" + "A：" + a + "\n";
     }
 
@@ -217,5 +225,20 @@ public class ZsxqContentService {
         return files;
     }
 
+    private String delStr(String str) {
+        try {
+            if (str.contains("<e")) {
+                String decodeStr = URLDecoder.decode(str, "utf-8");
+                return decodeStr.replace("<e", "<a").replace("/>", ">链接</a>");
+            }
+            return str;
+        } catch (Exception e) {
+            return str;
+        }
+    }
+
+    public static void main(String[] args) {
+
+    }
 
 }
