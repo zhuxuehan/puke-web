@@ -3,10 +3,15 @@ package com.zzz.puke.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.zzz.puke.bean.CircleWebhook;
 import com.zzz.puke.bean.ContentPacket;
+import com.zzz.puke.bean.MessagePacket;
 import com.zzz.puke.bean.ZsxqKv;
+import com.zzz.puke.dao.CircleWebhookRepository;
 import com.zzz.puke.dao.SysConfigRepository;
 import com.zzz.puke.dao.ZsxqKvRepository;
+import com.zzz.puke.enums.ContentChannel;
+import com.zzz.puke.utils.DingtalkUtil;
 import com.zzz.puke.utils.HttpUtils;
 import com.zzz.puke.utils.WechatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +19,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -25,6 +33,9 @@ public class ZsxqContentService {
 
     @Autowired
     SysConfigRepository sysConfigRepository;
+
+    @Autowired
+    CircleWebhookRepository circleWebhookRepository;
 
     @Autowired
     RedisTemplate redisTemplate;
@@ -46,13 +57,13 @@ public class ZsxqContentService {
 
     public void getContentAndSend(String group, HashMap<String, String> params) {
         ZsxqKv groupKv = zsxqKvRepository.findByGroup(group);
-        String zsxqWebhook = groupKv.getZsxqWebhook();
+        List<CircleWebhook> circleWebhookList = circleWebhookRepository.findByCircleAndChannel(group, ContentChannel.PUKE.toString());
         HashMap<String, String> header = getHeader(groupKv);
 
-        if (redisTemplate.hasKey(group)) {
+        if (redisTemplate.hasKey(ContentChannel.ZSXQ + group)) {
             return;
         }
-        redisTemplate.opsForValue().set(group, group, groupKv.getIntervalTime(), TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(ContentChannel.ZSXQ + group, group, groupKv.getIntervalTime(), TimeUnit.SECONDS);
         //星球访问频繁报错
         try {
             Thread.sleep(3000);
@@ -75,15 +86,26 @@ public class ZsxqContentService {
                 if (curTime.compareTo(lastTime) > 0) {
                     ContentPacket contentPacket = getXqPacket(row, header);
                     String localurl = "localhost/xq/group/id?scop=1&endtime";
-                    WechatUtils.sendWechatMessage(localurl, zsxqWebhook,
-                            contentPacket.getId(), curTime, contentPacket.getText(),
-                            contentPacket.getImages(), contentPacket.getAudios(),
-                            contentPacket.getFiles(), contentPacket.getComments());
+
+                    MessagePacket messagePacket = new MessagePacket();
+                    messagePacket.setContentPacket(contentPacket);
+                    messagePacket.setLocalUrl(localurl);
+                    for (CircleWebhook circleWebhook : circleWebhookList) {
+                        switch (circleWebhook.getWebhookChannel()) {
+                            case WECHAT:
+                                messagePacket.setWebhook(circleWebhook.getWebhook());
+                                WechatUtils.sendWechatMessage(messagePacket);
+                            case DINGTALK:
+                                messagePacket.setWebhook(circleWebhook.getWebhook());
+                                messagePacket.setSecret(circleWebhook.getSecret());
+                                DingtalkUtil.sendDingtalkMessage(messagePacket);
+                        }
+                    }
+
                     lastTime = curTime;
                 }
             }
             groupKv.setZsxqLastTime(lastTime);
-            groupKv.setLastSendTime(new Date());
             //设置上一次id
             zsxqKvRepository.save(groupKv);
         } catch (Exception e) {
@@ -94,6 +116,37 @@ public class ZsxqContentService {
     }
 
     public List<ContentPacket> getXqPacketsList(String group, String user, HashMap<String, String> params) {
+        ArrayList<ContentPacket> pakcetsList = new ArrayList<>(20);
+        ZsxqKv kv = zsxqKvRepository.findByGroup(group);
+        HashMap<String, String> header = getHeader(kv);
+        ArrayNode rows = null;
+        int t = 0;
+        do {
+            String list = HttpUtils.doGet(String.format(ZSXQ_GROUP_URL, group), params, header);
+            ObjectMapper listMapper = new ObjectMapper();
+            JsonNode listNode;
+            try {
+                listNode = listMapper.readValue(list, JsonNode.class);
+                rows = (ArrayNode) listNode.get("resp_data").get("topics");
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } while (t < 3 && null == rows);
+
+        if (null == rows) {
+            return new ArrayList<>();
+        }
+        for (int i = rows.size() - 1; i >= 0; i--) {
+            JsonNode row = rows.get(i);
+            ContentPacket contentPacket = getXqPacket(row, header);
+            pakcetsList.add(contentPacket);
+        }
+        getXqPacketsListFromRemote(group, user, params);
+        return pakcetsList;
+    }
+
+    public List<ContentPacket> getXqPacketsListFromRemote(String group, String user, HashMap<String, String> params) {
         ArrayList<ContentPacket> pakcetsList = new ArrayList<>(20);
         ZsxqKv kv = zsxqKvRepository.findByGroup(group);
         HashMap<String, String> header = getHeader(kv);
@@ -235,10 +288,6 @@ public class ZsxqContentService {
         } catch (Exception e) {
             return str;
         }
-    }
-
-    public static void main(String[] args) {
-
     }
 
 }

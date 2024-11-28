@@ -16,7 +16,7 @@ public class SendService {
     void sendContent(ContentChannel c, HashMap<String, String> params) {
         switch (c) {
             case PUKE:
-                pukeContentService.getContentAndSend();
+//                pukeContentService.getContentAndSend();
             case ZSXQ:
 //                zsxqContentService.getContentAndSend(params);
         }

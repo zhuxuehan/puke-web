@@ -3,55 +3,66 @@ package com.zzz.puke.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.zzz.puke.bean.PukeKv;
-import com.zzz.puke.bean.SysConfig;
-import com.zzz.puke.bean.Tokens;
+import com.zzz.puke.bean.*;
+import com.zzz.puke.dao.CircleWebhookRepository;
 import com.zzz.puke.dao.PukeKvRepository;
 import com.zzz.puke.dao.SysConfigRepository;
 import com.zzz.puke.dao.TokensRepository;
+import com.zzz.puke.enums.ContentChannel;
 import com.zzz.puke.enums.PukeURL;
 import com.zzz.puke.utils.HttpUtils;
 import com.zzz.puke.utils.WechatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class PukeContentService {
     private final static Logger logger = LoggerFactory.getLogger(PukeContentService.class);
 
-    public static String PUKE = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=be5b3c4a-e9f5-43c9-8edb-a501d5196438";
-
-    public static int lastId;
-    public static HashMap<String, String> header;
-    public static String LOCAL_HOST;
+    @Value("${myapp.pulic-host}")
+    public String LOCAL_HOST;
 
     private static Random random = new Random();
 
     @Autowired
-    PukeKvRepository pukeKvRepository;
+    private PukeKvRepository pukeKvRepository;
 
     @Autowired
-    TokensRepository tokensRepository;
+    private TokensRepository tokensRepository;
 
     @Autowired
-    SysConfigRepository sysConfigRepository;
+    private SysConfigRepository sysConfigRepository;
 
     @Autowired
-    RedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
 
+    @Autowired
+    private CircleWebhookRepository circleWebhookRepository;
 
-    public void setHeader() {
-        header = getHeader();
+    public void getAllContentAndSend() {
+        List<PukeKv> allKv = pukeKvRepository.findAll();
+        HashMap<String, String> params = new HashMap<>();
+        for (PukeKv lastKv : allKv) {
+            getContentAndSend(lastKv.getCircleid(), params);
+        }
     }
 
-    public void getContentAndSend() {
-        String list = getContentList(1, 10);
+    public void getContentAndSend(String circle, HashMap<String, String> params) {
+        PukeKv pukeKv = pukeKvRepository.findByCircle(circle);
+        if (redisTemplate.hasKey(ContentChannel.PUKE + circle)) {
+            return;
+        }
+        redisTemplate.opsForValue().set(ContentChannel.PUKE + circle, circle, pukeKv.getIntervalTime(), TimeUnit.SECONDS);
+
+        String list = getContentList(1, 10, pukeKv);
         ObjectMapper listMapper = new ObjectMapper();
         try {
             JsonNode listNode = listMapper.readValue(list, JsonNode.class);
@@ -59,120 +70,168 @@ public class PukeContentService {
             JsonNode data = listNode.get("data");
 
             //获取上一次id
-            Optional<PukeKv> lastOptional = pukeKvRepository.findById((long) 7);
-            PukeKv lastKv = lastOptional.get();
-            lastId = Integer.parseInt(lastKv.getPukeV());
+            int lastId = Integer.parseInt(pukeKv.getLastid());
 
             ArrayNode rows = (ArrayNode) data.get("rows");
             for (int i = rows.size() - 1; i >= 0; i--) {
                 JsonNode row = rows.get(i);
                 if (row.get("id").asInt() > lastId) {
-                    String content = getContent(row.get("id").asInt());
-                    ObjectMapper contentMapper = new ObjectMapper();
-                    JsonNode contentNode = contentMapper.readValue(content, JsonNode.class);
-                    JsonNode contentData = contentNode.get("data");
-
-                    //id
-                    lastId = contentData.get("id").asInt();
-                    String time = contentData.get("edit_at").asText();
-
-                    //图片
-                    JsonNode images = contentData.get("images");
-                    ArrayList<String> imagesList = new ArrayList<>();
-                    if (images.size() > 0) {
-                        for (JsonNode image : images) {
-                            imagesList.add(PukeURL.FILE_PRE + image.get("src").asText());
-                        }
-                    }
-
-                    //录音
-                    JsonNode audios = contentData.get("audios");
-                    ArrayList<String> audiosList = new ArrayList<>();
-                    if (audios.size() > 0) {
-                        for (JsonNode audio : audios) {
-                            audiosList.add(PukeURL.FILE_PRE + audio.get("src").asText());
-                        }
-                    }
-
-                    //文件
-                    JsonNode files = contentData.get("files");
-                    ArrayList<String> fList = new ArrayList<>();
-
-                    //评论
-                    ArrayNode list_comments = (ArrayNode) row.get("list_comments");
-                    ArrayList<String> cs = new ArrayList<>();
-                    if (list_comments.size() > 0) {
-                        for (JsonNode c : list_comments) {
-                            audiosList.add(PukeURL.FILE_PRE + c.get("src").asText());
-                            cs.add(c.get("content").asText());
-                        }
-                    }
                     String LOCAL_URL = "http://" + LOCAL_HOST + "/get/";
-                    WechatUtils.sendWechatMessage(LOCAL_URL, PUKE, lastId + "", time, contentData.get("content").asText(), imagesList, audiosList, fList, cs);
+                    //再去查一边详细信息
+                    String content = getContent(row.get("circle_id").asText(), row.get("id").asInt());
+                    ContentPacket cPacket = getPkPacket(content);
+                    List<CircleWebhook> webhookList = circleWebhookRepository
+                            .findByCircleAndChannel(lastId + "", ContentChannel.PUKE.toString());
+                    for (CircleWebhook cw : webhookList) {
+                        MessagePacket mPacket = new MessagePacket();
+                        mPacket.setWebhook(cw.getWebhook());
+                        mPacket.setLocalUrl(LOCAL_URL);
+                        mPacket.setContentPacket(cPacket);
+                        WechatUtils.sendWechatMessage(mPacket);
+                    }
                 }
             }
-            lastKv.setPukeV(lastId + "");
+
+            pukeKv.setLastid(lastId + "");
             //设置上一次id
-            pukeKvRepository.save(lastKv);
+            pukeKvRepository.save(pukeKv);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("header: {} , list: {}", header, list);
-            WechatUtils.sendErrorMessage("ContentAndSend:" + e.toString() + header.toString());
+            WechatUtils.sendErrorMessage("ContentAndSend:" + e);
         }
-
     }
 
-    public String getContentList(int pageNum, int pageSize) {
+    public ContentPacket getPkPacket(String content) {
+        //再去调用拿详细信息
+        ObjectMapper contentMapper = new ObjectMapper();
+        JsonNode contentNode = null;
+        try {
+            contentNode = contentMapper.readValue(content, JsonNode.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        JsonNode contentData = contentNode.get("data");
+
+        //id
+        int lastId = contentData.get("id").asInt();
+        String time = contentData.get("edit_at").asText();
+
+        //图片
+        JsonNode images = contentData.get("images");
+        ArrayList<String> imagesList = new ArrayList<>();
+        if (images.size() > 0) {
+            for (JsonNode image : images) {
+                imagesList.add(PukeURL.FILE_PRE + image.get("src").asText());
+            }
+        }
+
+        //录音
+        JsonNode audios = contentData.get("audios");
+        ArrayList<String> audiosList = new ArrayList<>();
+        if (audios.size() > 0) {
+            for (JsonNode audio : audios) {
+                audiosList.add(audio.get("src").asText());
+            }
+        }
+
+        //文件
+        JsonNode files = contentData.get("files");
+        ArrayList<String> filesList = new ArrayList<>();
+
+        //评论
+        ArrayList<String> commentsList = new ArrayList<>();
+//        ArrayNode list_commentsNode = (ArrayNode) row.get("list_comments");
+
+//        if (list_commentsNode.size() > 0) {
+//            for (JsonNode c : list_commentsNode) {
+//                audiosList.add(PukeURL.FILE_PRE + c.get("src").asText());
+//                commentsList.add(c.get("content").asText());
+//            }
+//        }
+
+        ContentPacket cPacket = new ContentPacket();
+        cPacket.setId(lastId + "");
+        cPacket.setCurrTime(time);
+        cPacket.setText(contentData.get("content").asText());
+        cPacket.setImages(imagesList);
+        cPacket.setAudios(audiosList);
+        cPacket.setFiles(filesList);
+        cPacket.setComments(commentsList);
+        return cPacket;
+    }
+
+    public String getContentList(int pageNum, int pageSize, PukeKv pukeKv) {
         HashMap<String, String> listParams = new HashMap<>();
         listParams.put("page", "" + pageNum);
         listParams.put("rows", "" + pageSize);
-        listParams.put("circle_id", "5157636");
+        listParams.put("circle_id", pukeKv.getCircleid());
         listParams.put("dynamic_filter", "all");
         listParams.put("get_good_users", "1");
         listParams.put("get_award_users", "1");
         listParams.put("get_comments", "1");
         listParams.put("flag_order", "t");
-        setHeader();
-        String contentList = HttpUtils.doGet(PukeURL.GET_LIST, listParams, header);
+        String contentList = HttpUtils.doGet(PukeURL.GET_LIST, listParams, getHeader(pukeKv));
         return contentList;
     }
 
-    @Cacheable(cacheNames = {"detail"}, key = "#id")
-    public String getContent(int id) {
+    public List<ContentPacket> getPkPacketsListFromRemote(String circle, String user, int pageNum, int pageSize) {
+        ArrayList<ContentPacket> pakcetsList = new ArrayList<>(10);
+        PukeKv pukeKv = pukeKvRepository.findByCircle(circle);
+        ArrayNode rows = null;
+        int t = 0;
+        try {
+            do {
+                String list = getContentList(pageNum, pageSize, pukeKv);
+                ObjectMapper listMapper = new ObjectMapper();
+                JsonNode listNode = null;
+                listNode = listMapper.readValue(list, JsonNode.class);
+                JsonNode data = listNode.get("data");
+                rows = (ArrayNode) data.get("rows");
+            } while (t < 2 && null == rows);
+
+            if (null == rows) {
+                return new ArrayList<>();
+            }
+            for (int i = 0; i < rows.size(); i++) {
+                JsonNode row = rows.get(i);
+                String content = getContent(row.get("circle_id").asText(), row.get("id").asInt());
+                ContentPacket contentPacket = getPkPacket(content);
+                pakcetsList.add(contentPacket);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return pakcetsList;
+    }
+
+    @Cacheable(cacheNames = {"detail"}, key = "#circleid + #id")
+    public String getContent(String circleid, int id) {
+        PukeKv pukeKv = pukeKvRepository.findByCircle(circleid);
         HashMap<String, String> contentParams = new HashMap<>();
         contentParams.put("id", id + "");
         contentParams.put("get_good_users", "1");
-        String content = HttpUtils.doGet(PukeURL.GET_CONTENT, contentParams, header);
+        String content = HttpUtils.doGet(PukeURL.GET_CONTENT, contentParams, getHeader(pukeKv));
         return content;
     }
 
     public void updateCookie(String xAccessToken, String newLastId) {
-        Optional<PukeKv> lastOptional = pukeKvRepository.findById((long) 7);
-        PukeKv lastKv = lastOptional.get();
-        lastKv.setPukeV(newLastId);
-        pukeKvRepository.save(lastKv);
-
-        Optional<PukeKv> tokenOptional = pukeKvRepository.findById((long) 1);
-        PukeKv tokenKv = tokenOptional.get();
-        tokenKv.setPukeV(xAccessToken);
-        pukeKvRepository.save(tokenKv);
+        PukeKv circle = pukeKvRepository.findByCircle("51520573");
+        if (!Objects.isNull(xAccessToken)) {
+            circle.setxAccessToken(xAccessToken);
+        }
+        if (!Objects.isNull(newLastId)) {
+            circle.setLastid(newLastId);
+        }
+        pukeKvRepository.save(circle);
 
         Set<String> keys = redisTemplate.keys("*");
         redisTemplate.delete(keys);
     }
 
-    private HashMap<String, String> getHeader() {
-        HashMap<String, String> configMap = new HashMap<>();
-        Iterable<PukeKv> allConfig = pukeKvRepository.findAll();
-        Iterator<PukeKv> iterator = allConfig.iterator();
-        while (iterator.hasNext()) {
-            PukeKv next = iterator.next();
-            configMap.put(next.getPukeK(), next.getPukeV());
-        }
-        lastId = Integer.parseInt(configMap.get("lastId"));
+    private HashMap<String, String> getHeader(PukeKv pukeKv) {
         HashMap<String, String> header = new HashMap<>();
-        header.put("x-access-token", configMap.get("xAccessToken"));
-        header.put("x-client-key", configMap.get("xClientKey"));
+        header.put("x-access-token", pukeKv.getxAccessToken());
+        header.put("x-client-key", pukeKv.getxClientKey());
         //获取token
         header.put("x-client-token", getxClientToken());
         return header;
@@ -193,9 +252,14 @@ public class PukeContentService {
     }
 
     public void sendHistory() {
-        SysConfig config = sysConfigRepository.findByK("host");
-        String host = config.getSysV();
-        LOCAL_HOST = host;
-        WechatUtils.sendMessage("[点击查看历史消息](http://" + host + "/list)", PUKE);
+        List<CircleWebhook> webhookList = circleWebhookRepository.findByChannel(ContentChannel.PUKE.toString());
+        for (CircleWebhook w : webhookList) {
+            String listURL = "[点击查看历史消息](http://" + LOCAL_HOST + "/pk/list/)" + w.getCircleId();
+            //发送微信
+            WechatUtils.sendMessage(listURL, w.getWebhook());
+            // TODO: 发送钉钉
+        }
     }
+
+
 }

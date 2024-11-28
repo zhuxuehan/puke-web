@@ -24,19 +24,19 @@ public class SendMessageTask {
 
     @Scheduled(cron = "0/15 * 7-15 * * ?")
     public void execute() {
-        pukeContentService.getContentAndSend();
+        pukeContentService.getAllContentAndSend();
         zsxqContentService.getAllContentAndSend();
     }
 
     @Scheduled(cron = "0 */20 15-23 * * ?")
     public void execute2() {
-        pukeContentService.getContentAndSend();
+        pukeContentService.getAllContentAndSend();
         zsxqContentService.getAllContentAndSend();
     }
 
     @Scheduled(cron = "0 */20 0-7 * * ?")
     public void execute3() {
-        pukeContentService.getContentAndSend();
+        pukeContentService.getAllContentAndSend();
         zsxqContentService.getAllContentAndSend();
     }
 

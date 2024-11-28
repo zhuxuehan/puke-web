@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Date;
 
 @Entity
 @Table(name = "zsxq_kv")
@@ -24,12 +23,6 @@ public class ZsxqKv {
 
     @Column(name = "zsxq_last_time")
     private String zsxqLastTime;
-
-    @Column(name = "zsxq_webhook")
-    private String zsxqWebhook;
-
-    @Column(name = "last_send_time")
-    private Date lastSendTime;
 
     @Column(name = "interval_time")
     private int intervalTime;
@@ -72,22 +65,6 @@ public class ZsxqKv {
 
     public void setZsxqLastTime(String zsxqLastTime) {
         this.zsxqLastTime = zsxqLastTime;
-    }
-
-    public String getZsxqWebhook() {
-        return zsxqWebhook;
-    }
-
-    public void setZsxqWebhook(String zsxqWebhook) {
-        this.zsxqWebhook = zsxqWebhook;
-    }
-
-    public Date getLastSendTime() {
-        return lastSendTime;
-    }
-
-    public void setLastSendTime(Date lastSendTime) {
-        this.lastSendTime = lastSendTime;
     }
 
     public int getIntervalTime() {

@@ -42,6 +42,9 @@ public class XqController {
         if (null != end_time) {
             params.put("end_time", end_time);
         }
+//        else {
+//            params.put("end_time", );
+//        }
 
         String lastTime = "";
         List<ContentPacket> packetsList = zsxqContentService.getXqPacketsList(group, "", params);

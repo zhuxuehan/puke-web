@@ -1,6 +1,7 @@
 package com.zzz.puke.bean;
 
 import java.util.LinkedList;
+import java.util.List;
 
 public class ContentPacket {
     private String id;
@@ -8,10 +9,10 @@ public class ContentPacket {
     private String type;
     private String group;
     private String text;
-    private LinkedList<String> images = new LinkedList<>();
-    private LinkedList<String> files = new LinkedList<>();
-    private LinkedList<String> audios = new LinkedList<>();
-    private LinkedList<String> comments = new LinkedList<>();
+    private List<String> images = new LinkedList<>();
+    private List<String> files = new LinkedList<>();
+    private List<String> audios = new LinkedList<>();
+    private List<String> comments = new LinkedList<>();
 
     public String getId() {
         return id;
@@ -29,28 +30,12 @@ public class ContentPacket {
         this.currTime = currTime;
     }
 
-    public LinkedList<String> getImages() {
-        return images;
+    public String getType() {
+        return type;
     }
 
-    public void setImages(LinkedList<String> images) {
-        this.images = images;
-    }
-
-    public LinkedList<String> getFiles() {
-        return files;
-    }
-
-    public void setFiles(LinkedList<String> files) {
-        this.files = files;
-    }
-
-    public LinkedList<String> getAudios() {
-        return audios;
-    }
-
-    public void setAudios(LinkedList<String> audios) {
-        this.audios = audios;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getGroup() {
@@ -61,14 +46,6 @@ public class ContentPacket {
         this.group = group;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getText() {
         return text;
     }
@@ -77,11 +54,35 @@ public class ContentPacket {
         this.text = text;
     }
 
-    public LinkedList<String> getComments() {
+    public List<String> getImages() {
+        return images;
+    }
+
+    public void setImages(List<String> images) {
+        this.images = images;
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
+    }
+
+    public List<String> getAudios() {
+        return audios;
+    }
+
+    public void setAudios(List<String> audios) {
+        this.audios = audios;
+    }
+
+    public List<String> getComments() {
         return comments;
     }
 
-    public void setComments(LinkedList<String> comments) {
+    public void setComments(List<String> comments) {
         this.comments = comments;
     }
 }

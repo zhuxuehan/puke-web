@@ -2,16 +2,19 @@ server:
   port: 80
   servlet:
     context-path: /
+myapp:
+  pulic-host: 116.62.245.234
 spring:
   datasource:
     #内网地址
-    url: jdbc:mysql://172.17.50.101:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+#    url: jdbc:mysql://172.17.50.101:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+#    username: root
+#    password: Hello123!@#
+    url: jdbc:mysql://localhost:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    password: 123456
     username: root
-    password: Hello123!@#
-#    url: jdbc:mysql://localhost:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-#    password: 123456
   redis:
-    host: 172.17.50.101
+    host: 116.62.245.234
     port: 6379
     lettuce:
       pool:
