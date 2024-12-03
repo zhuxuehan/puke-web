@@ -12,6 +12,19 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="format-detection" content="telephone=no">
+    <script th:inline="javascript">
+        function goToNext() {
+            var currentUrl = window.location.href;
+            var cleanUrl = currentUrl.split("?")[0];
+            window.location.href = cleanUrl + "?pageNum=" + [[${pageData.pageNum + 1}]] + "&pageSize=" + [[${pageData.pageSize}]]
+        }
+
+        function goToPre() {
+            var currentUrl = window.location.href;
+            var cleanUrl = currentUrl.split("?")[0];
+            window.location.href = cleanUrl + "?pageNum=" + [[${pageData.pageNum - 1}]] + "&pageSize=" + [[${pageData.pageSize}]]
+        }
+    </script>
 </head>
 <body>
 
@@ -36,7 +49,7 @@
                     </div>
 
                     <!--内容图片-->
-                    <a th:href="'get/' + ${content.id}" class="pk-block">
+                    <a th:href="'/pk/get/' + ${content.group} + '/' + ${content.id}" class="pk-block">
                         <div class="short-text">
                             <div class="pk-mg-b16" style="text-indent: 0px;">
                                 <span class="tweet-content content-text pk-h4-text32 pk-select-none"
@@ -97,23 +110,24 @@
 
         <!-- 上一页 -->
         <li th:if="${pageData.pageNum gt 1}">
-            <a th:href="'/list?pageNum=' + ${pageData.pageNum - 1} + '&pageSize=' + ${pageData.pageSize}"
-               th:text="上一页"></a>
+            <button onclick="goToPre()">上一页</button>
         </li>
 
         <!-- 中间页 -->
-        <li th:each="pageNum:${#numbers.sequence(pageData.pageNum - 5, pageData.pageNum + 5)}">
-            <a th:href="'/list?pageNum=' + ${pageNum} + '&pageSize=' + ${pageData.pageSize}" th:text="${pageNum}"
-               th:if="${pageNum ne pageData.pageNum and pageNum gt 0}"></a>
-            <a th:href="'/list?pageNum=' + ${pageNum} + '&pageSize=' + ${pageData.pageSize}" th:text="${pageNum}"
-               th:if="${pageNum eq pageData.getPageNum()}"
-               th:style="'font-weight:bold;background: #6faed9;'"></a>
+        <li>
+            <a th:text="${pageData.pageNum}"></a>
         </li>
+        <!--        <li th:each="pageNum:${#numbers.sequence(pageData.pageNum - 5, pageData.pageNum + 5)}">-->
+        <!--            <a th:href="'/list?pageNum=' + ${pageNum} + '&pageSize=' + ${pageData.pageSize}" th:text="${pageNum}"-->
+        <!--               th:if="${pageNum ne pageData.pageNum and pageNum gt 0}"></a>-->
+        <!--            <a th:href="'/list?pageNum=' + ${pageNum} + '&pageSize=' + ${pageData.pageSize}" th:text="${pageNum}"-->
+        <!--               th:if="${pageNum eq pageData.getPageNum()}"-->
+        <!--               th:style="'font-weight:bold;background: #6faed9;'"></a>-->
+        <!--        </li>-->
 
         <!-- 下一页 -->
         <li th:if="${pageData.pageNum lt 100}">
-            <a th:href="'/list?pageNum=' + ${pageData.pageNum + 1} + '&pageSize=' + ${pageData.pageSize}"
-               th:text="下一页"></a>
+            <button onclick="goToNext()">下一页</button>
         </li>
 
 

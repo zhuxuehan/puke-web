@@ -17,7 +17,7 @@ public class WechatUtils {
         ContentPacket cPacket = mPacket.getContentPacket();
         String content = cPacket.getText();
         if (!content.isEmpty()) {
-            text += "[" + cPacket.getId() + "](" + mPacket.getLocalUrl() + cPacket.getId() + ")\n";
+            text += "[" + cPacket.getId() + "](" + mPacket.getLocalUrl() + ")\n";
             text += "###### " + cPacket.getCurrTime() + "\n\n";
             Remark remark = new Remark();
             String convert = remark.convert(content) + "\n";

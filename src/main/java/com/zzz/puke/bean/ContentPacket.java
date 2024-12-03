@@ -1,18 +1,29 @@
 package com.zzz.puke.bean;
 
+import com.zzz.puke.enums.ContentChannel;
+
 import java.util.LinkedList;
 import java.util.List;
 
 public class ContentPacket {
     private String id;
-    private String currTime;
     private String type;
     private String group;
     private String text;
+    private String currTime;
+    private ContentChannel contentChannel;
     private List<String> images = new LinkedList<>();
     private List<String> files = new LinkedList<>();
     private List<String> audios = new LinkedList<>();
     private List<String> comments = new LinkedList<>();
+
+    public ContentChannel getContentChannel() {
+        return contentChannel;
+    }
+
+    public void setContentChannel(ContentChannel contentChannel) {
+        this.contentChannel = contentChannel;
+    }
 
     public String getId() {
         return id;

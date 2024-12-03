@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Date;
 
 @Entity
 @Table(name = "zsxq_kv")
@@ -26,6 +27,10 @@ public class ZsxqKv {
 
     @Column(name = "interval_time")
     private int intervalTime;
+
+    @Column(name = "last_send_time")
+    private Date lastSendTime;
+
 
     public long getId() {
         return id;
@@ -73,5 +78,13 @@ public class ZsxqKv {
 
     public void setIntervalTime(int intervalTime) {
         this.intervalTime = intervalTime;
+    }
+
+    public Date getLastSendTime() {
+        return lastSendTime;
+    }
+
+    public void setLastSendTime(Date lastSendTime) {
+        this.lastSendTime = lastSendTime;
     }
 }

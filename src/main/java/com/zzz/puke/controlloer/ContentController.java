@@ -59,6 +59,7 @@ public class ContentController {
             ContentPacket contentPacket = pkList.get(i);
             ContentMode contentMode = new ContentMode();
             contentMode.setId(contentPacket.getId());
+            contentMode.setGroup(contentPacket.getGroup());
             contentMode.setTime(contentPacket.getCurrTime());
             contentMode.setContent(contentPacket.getText().replace("</p>......", "......</p>"));
 

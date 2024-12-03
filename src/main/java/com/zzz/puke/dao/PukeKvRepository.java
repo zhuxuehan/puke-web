@@ -4,7 +4,9 @@ import com.zzz.puke.bean.PukeKv;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface PukeKvRepository extends JpaRepository<PukeKv, Long> {
 
     @Query("select p from PukeKv p where p.circleid = :circleid")

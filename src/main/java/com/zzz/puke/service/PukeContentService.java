@@ -71,17 +71,18 @@ public class PukeContentService {
 
             //获取上一次id
             int lastId = Integer.parseInt(pukeKv.getLastid());
-
+            int currId = 0;
             ArrayNode rows = (ArrayNode) data.get("rows");
             for (int i = rows.size() - 1; i >= 0; i--) {
                 JsonNode row = rows.get(i);
-                if (row.get("id").asInt() > lastId) {
-                    String LOCAL_URL = "http://" + LOCAL_HOST + "/get/";
+                currId = row.get("id").asInt();
+                if (currId > lastId) {
+                    String LOCAL_URL = "http://" + LOCAL_HOST + "/pk/get/" + circle + "/" + currId;
                     //再去查一边详细信息
                     String content = getContent(row.get("circle_id").asText(), row.get("id").asInt());
                     ContentPacket cPacket = getPkPacket(content);
                     List<CircleWebhook> webhookList = circleWebhookRepository
-                            .findByCircleAndChannel(lastId + "", ContentChannel.PUKE.toString());
+                            .findByCircleAndChannel(circle + "", ContentChannel.PUKE);
                     for (CircleWebhook cw : webhookList) {
                         MessagePacket mPacket = new MessagePacket();
                         mPacket.setWebhook(cw.getWebhook());
@@ -89,10 +90,12 @@ public class PukeContentService {
                         mPacket.setContentPacket(cPacket);
                         WechatUtils.sendWechatMessage(mPacket);
                     }
+                    lastId = currId;
                 }
             }
 
             pukeKv.setLastid(lastId + "");
+            pukeKv.setLastSendTime(new Date());
             //设置上一次id
             pukeKvRepository.save(pukeKv);
         } catch (Exception e) {
@@ -115,6 +118,7 @@ public class PukeContentService {
         //id
         int lastId = contentData.get("id").asInt();
         String time = contentData.get("edit_at").asText();
+        String circleId = contentData.get("circle_id").asText();
 
         //图片
         JsonNode images = contentData.get("images");
@@ -157,6 +161,7 @@ public class PukeContentService {
         cPacket.setAudios(audiosList);
         cPacket.setFiles(filesList);
         cPacket.setComments(commentsList);
+        cPacket.setGroup(circleId);
         return cPacket;
     }
 
@@ -252,12 +257,18 @@ public class PukeContentService {
     }
 
     public void sendHistory() {
-        List<CircleWebhook> webhookList = circleWebhookRepository.findByChannel(ContentChannel.PUKE.toString());
+        List<CircleWebhook> webhookList = circleWebhookRepository.findByChannel(ContentChannel.PUKE);
         for (CircleWebhook w : webhookList) {
-            String listURL = "[点击查看历史消息](http://" + LOCAL_HOST + "/pk/list/)" + w.getCircleId();
+            String listURL = "[点击查看历史消息](http://" + LOCAL_HOST + "/pk/list/" + w.getCircleId() + ")";
             //发送微信
-            WechatUtils.sendMessage(listURL, w.getWebhook());
-            // TODO: 发送钉钉
+            switch (w.getWebhookChannel()) {
+                case WECHAT:
+                    WechatUtils.sendMessage(listURL, w.getWebhook());
+                    break;
+                case DINGTALK:
+                    // TODO: 发送钉钉
+                    break;
+            }
         }
     }
 

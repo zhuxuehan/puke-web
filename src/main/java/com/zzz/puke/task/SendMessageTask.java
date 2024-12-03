@@ -22,13 +22,13 @@ public class SendMessageTask {
 
     public static int num;
 
-    @Scheduled(cron = "0/15 * 7-15 * * ?")
+    @Scheduled(cron = "0 * 7-15 * * ?")
     public void execute() {
         pukeContentService.getAllContentAndSend();
         zsxqContentService.getAllContentAndSend();
     }
 
-    @Scheduled(cron = "0 */20 15-23 * * ?")
+    @Scheduled(cron = "0 */1 15-23 * * ?")
     public void execute2() {
         pukeContentService.getAllContentAndSend();
         zsxqContentService.getAllContentAndSend();

@@ -3,6 +3,7 @@ package com.zzz.puke.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.mongodb.client.model.CreateCollectionOptions;
 import com.zzz.puke.bean.CircleWebhook;
 import com.zzz.puke.bean.ContentPacket;
 import com.zzz.puke.bean.MessagePacket;
@@ -15,14 +16,13 @@ import com.zzz.puke.utils.DingtalkUtil;
 import com.zzz.puke.utils.HttpUtils;
 import com.zzz.puke.utils.WechatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.CollectionOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -39,6 +39,10 @@ public class ZsxqContentService {
 
     @Autowired
     RedisTemplate redisTemplate;
+
+
+    @Autowired
+    MongoTemplate mongoTemplate;
 
     public static String ZSXQ_GROUP_URL = "https://api.zsxq.com/v2/groups/%s/topics?scope=all&count=20";
 
@@ -57,7 +61,7 @@ public class ZsxqContentService {
 
     public void getContentAndSend(String group, HashMap<String, String> params) {
         ZsxqKv groupKv = zsxqKvRepository.findByGroup(group);
-        List<CircleWebhook> circleWebhookList = circleWebhookRepository.findByCircleAndChannel(group, ContentChannel.PUKE.toString());
+        List<CircleWebhook> circleWebhookList = circleWebhookRepository.findByCircleAndChannel(group, ContentChannel.ZSXQ);
         HashMap<String, String> header = getHeader(groupKv);
 
         if (redisTemplate.hasKey(ContentChannel.ZSXQ + group)) {
@@ -65,11 +69,6 @@ public class ZsxqContentService {
         }
         redisTemplate.opsForValue().set(ContentChannel.ZSXQ + group, group, groupKv.getIntervalTime(), TimeUnit.SECONDS);
         //星球访问频繁报错
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         String list = HttpUtils.doGet(String.format(ZSXQ_GROUP_URL, group), params, header);
         ObjectMapper listMapper = new ObjectMapper();
         try {
@@ -95,10 +94,12 @@ public class ZsxqContentService {
                             case WECHAT:
                                 messagePacket.setWebhook(circleWebhook.getWebhook());
                                 WechatUtils.sendWechatMessage(messagePacket);
+                                break;
                             case DINGTALK:
                                 messagePacket.setWebhook(circleWebhook.getWebhook());
                                 messagePacket.setSecret(circleWebhook.getSecret());
                                 DingtalkUtil.sendDingtalkMessage(messagePacket);
+                                break;
                         }
                     }
 
@@ -106,6 +107,7 @@ public class ZsxqContentService {
                 }
             }
             groupKv.setZsxqLastTime(lastTime);
+            groupKv.setLastSendTime(new Date());
             //设置上一次id
             zsxqKvRepository.save(groupKv);
         } catch (Exception e) {
@@ -116,33 +118,14 @@ public class ZsxqContentService {
     }
 
     public List<ContentPacket> getXqPacketsList(String group, String user, HashMap<String, String> params) {
-        ArrayList<ContentPacket> pakcetsList = new ArrayList<>(20);
-        ZsxqKv kv = zsxqKvRepository.findByGroup(group);
-        HashMap<String, String> header = getHeader(kv);
-        ArrayNode rows = null;
-        int t = 0;
-        do {
-            String list = HttpUtils.doGet(String.format(ZSXQ_GROUP_URL, group), params, header);
-            ObjectMapper listMapper = new ObjectMapper();
-            JsonNode listNode;
-            try {
-                listNode = listMapper.readValue(list, JsonNode.class);
-                rows = (ArrayNode) listNode.get("resp_data").get("topics");
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } while (t < 3 && null == rows);
+        //判断Mongo中是否有这个, 没有去远程拿
+        if (mongoTemplate.collectionExists(ContentChannel.ZSXQ + group)) {
 
-        if (null == rows) {
-            return new ArrayList<>();
+        } else {
+            mongoTemplate.createCollection();
+            List<ContentPacket> xqPacketsListFromRemote = getXqPacketsListFromRemote(group, user, params);
         }
-        for (int i = rows.size() - 1; i >= 0; i--) {
-            JsonNode row = rows.get(i);
-            ContentPacket contentPacket = getXqPacket(row, header);
-            pakcetsList.add(contentPacket);
-        }
-        getXqPacketsListFromRemote(group, user, params);
+
         return pakcetsList;
     }
 
@@ -288,6 +271,12 @@ public class ZsxqContentService {
         } catch (Exception e) {
             return str;
         }
+    }
+
+    private void createMongoCollection() {
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
+        createCollectionOptions.timeseries
+        mongoTemplate.createCollection("asdf",CollectionOptions.timeSeries);
     }
 
 }
