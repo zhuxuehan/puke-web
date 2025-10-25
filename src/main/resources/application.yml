@@ -3,27 +3,25 @@ server:
   servlet:
     context-path: /
 myapp:
-  pulic-host: 116.62.245.234
+  pulic-host: 1.116.122.186
 spring:
   datasource:
     #内网地址
-#    url: jdbc:mysql://172.17.50.101:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-#    username: root
-#    password: Hello123!@#
-    url: jdbc:mysql://localhost:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-    password: 123456
+    url: jdbc:mysql://1.116.122.186:3306/kv?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
+    password: Hello123!@#
+
   redis:
-    host: 116.62.245.234
+    host: 1.116.122.186
     port: 6379
     lettuce:
       pool:
         max-active: 10 #连接池最大连接数（使用负值表示没有限制）
         max-idle: 10 #连接池中的最大空闲连接
         min-idle: 2 #连接池中的最小空闲连接
-  data:
-    mongodb:
-      uri: mongodb://zxh:Hello123@116.62.245.234:27017/zxhtest
+  #  data:
+  #    mongodb:
+  #      uri: mongodb://zxh:Hello123@116.62.245.234:27017/zxhtest
 
   jpa:
     database: MySQL

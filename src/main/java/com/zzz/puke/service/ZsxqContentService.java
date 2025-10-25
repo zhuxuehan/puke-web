@@ -3,7 +3,6 @@ package com.zzz.puke.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.mongodb.client.model.CreateCollectionOptions;
 import com.zzz.puke.bean.CircleWebhook;
 import com.zzz.puke.bean.ContentPacket;
 import com.zzz.puke.bean.MessagePacket;
@@ -16,8 +15,6 @@ import com.zzz.puke.utils.DingtalkUtil;
 import com.zzz.puke.utils.HttpUtils;
 import com.zzz.puke.utils.WechatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -41,8 +38,8 @@ public class ZsxqContentService {
     RedisTemplate redisTemplate;
 
 
-    @Autowired
-    MongoTemplate mongoTemplate;
+//    @Autowired
+//    MongoTemplate mongoTemplate;
 
     public static String ZSXQ_GROUP_URL = "https://api.zsxq.com/v2/groups/%s/topics?scope=all&count=20";
 
@@ -119,14 +116,14 @@ public class ZsxqContentService {
 
     public List<ContentPacket> getXqPacketsList(String group, String user, HashMap<String, String> params) {
         //判断Mongo中是否有这个, 没有去远程拿
-        if (mongoTemplate.collectionExists(ContentChannel.ZSXQ + group)) {
+//        if (mongoTemplate.collectionExists(ContentChannel.ZSXQ + group)) {
+//
+//        } else {
+//            mongoTemplate.createCollection();
+//            List<ContentPacket> xqPacketsListFromRemote = getXqPacketsListFromRemote(group, user, params);
+//        }
 
-        } else {
-            mongoTemplate.createCollection();
-            List<ContentPacket> xqPacketsListFromRemote = getXqPacketsListFromRemote(group, user, params);
-        }
-
-        return pakcetsList;
+        return null;
     }
 
     public List<ContentPacket> getXqPacketsListFromRemote(String group, String user, HashMap<String, String> params) {
@@ -273,10 +270,10 @@ public class ZsxqContentService {
         }
     }
 
-    private void createMongoCollection() {
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
-        createCollectionOptions.timeseries
-        mongoTemplate.createCollection("asdf",CollectionOptions.timeSeries);
-    }
+//    private void createMongoCollection() {
+//        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
+//        createCollectionOptions.timeseries
+//        mongoTemplate.createCollection("asdf",CollectionOptions.timeSeries);
+//    }
 
 }

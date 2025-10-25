@@ -51,16 +51,16 @@ public class PukeContentService {
         List<PukeKv> allKv = pukeKvRepository.findAll();
         HashMap<String, String> params = new HashMap<>();
         for (PukeKv lastKv : allKv) {
-            getContentAndSend(lastKv.getCircleid(), params);
+            getContentAndSend(lastKv, params);
         }
     }
 
-    public void getContentAndSend(String circle, HashMap<String, String> params) {
-        PukeKv pukeKv = pukeKvRepository.findByCircle(circle);
-        if (redisTemplate.hasKey(ContentChannel.PUKE + circle)) {
+    public void getContentAndSend(PukeKv pukeKv, HashMap<String, String> params) {
+        String circleid = pukeKv.getCircleid();
+        if (redisTemplate.hasKey(ContentChannel.PUKE + circleid)) {
             return;
         }
-        redisTemplate.opsForValue().set(ContentChannel.PUKE + circle, circle, pukeKv.getIntervalTime(), TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(ContentChannel.PUKE + circleid, circleid, pukeKv.getIntervalTime(), TimeUnit.SECONDS);
 
         String list = getContentList(1, 10, pukeKv);
         ObjectMapper listMapper = new ObjectMapper();
@@ -77,12 +77,12 @@ public class PukeContentService {
                 JsonNode row = rows.get(i);
                 currId = row.get("id").asInt();
                 if (currId > lastId) {
-                    String LOCAL_URL = "http://" + LOCAL_HOST + "/pk/get/" + circle + "/" + currId;
+                    String LOCAL_URL = "http://" + LOCAL_HOST + "/pk/get/" + circleid + "/" + currId;
                     //再去查一边详细信息
                     String content = getContent(row.get("circle_id").asText(), row.get("id").asInt());
                     ContentPacket cPacket = getPkPacket(content);
                     List<CircleWebhook> webhookList = circleWebhookRepository
-                            .findByCircleAndChannel(circle + "", ContentChannel.PUKE);
+                            .findByCircleAndChannel(circleid + "", ContentChannel.PUKE);
                     for (CircleWebhook cw : webhookList) {
                         MessagePacket mPacket = new MessagePacket();
                         mPacket.setWebhook(cw.getWebhook());
